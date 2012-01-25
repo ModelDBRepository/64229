@@ -44,7 +44,7 @@ STATE {
 BREAKPOINT {
 
 	rates(cai)
-	SOLVE state METHOD euler
+	SOLVE state METHOD cnexp
 	o = 1-c
 	i = gmax*o*(v-erev) ik=i 
 }

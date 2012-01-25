@@ -22,3 +22,6 @@ these simulations were run in parallel. When executed, an out.dat file
 containing the spike pattern is created as well as some performance information
 written to the perf.dat file.
 
+20120125 update solve methods in parbush/kca.mod parscalebush/kca.mod
+from euler to cnexp as per
+http://www.neuron.yale.edu/phpbb/viewtopic.php?f=28&t=592
