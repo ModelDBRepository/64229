@@ -1,0 +1,286 @@
+// $Id: geom.hoc,v 1.2 2006/02/08 11:59:39 hines Exp $
+
+create acell_home_
+access acell_home_
+
+{load_file("netparmpi.hoc")}
+
+//* replace labels
+FP=2 // fat pyramidal cell
+TP=3 // thin pyramidal cell
+B5=4 // layer 5 basket interneuron
+
+{CTYP.remove_all()}
+for scase(XO,"NU","SM","FP","TP","B5","TC","RE","NS") CTYP.append(new String2(XO.s))
+for scase(XO,"","NStim","Pyramidal","Pyramidal2","Basket","","","") CTYP.o(i1).t=XO.s
+
+//* template SStim
+begintemplate SStim
+external acell_home_
+public fflag,pp,synlist,connect2target
+public lid,gid
+objref pp
+
+proc init () {
+  acell_home_ pp=new NStim(0.5)
+}
+
+proc connect2target () {
+  $o2 = new NetCon(pp,$o1)
+  $o2.threshold=0.
+}
+
+func fflag () { return 1 }
+
+endtemplate SStim
+
+//* template Basket
+begintemplate Basket
+public soma, dend, ampa, pre, gabaa, fflag, stim, synlist,connect2target, slist
+public lid,gid
+
+// Basket cell approximation (4.92) from G1.34 of V1 project
+// Paul Bush 1992
+
+create soma, dend[6]
+
+objref ampa[5], pre, gabaa[3], stim[3], synlist, slist
+
+proc init() {
+  soma connect dend[0](0), 1
+  dend[0] connect dend[1](0), 1
+  dend[0] connect dend[2](0), 1
+  soma connect dend[3](0), 0
+  dend[3] connect dend[4](0), 1
+  dend[3] connect dend[5](0), 1
+
+  soma.L = 15
+  dend[0].L = 50
+  dend[1].L = 150
+  dend[2].L = 150
+  dend[3].L = 50
+  dend[4].L = 150
+  dend[5].L = 150
+
+  soma.diam = 15
+  dend[0].diam = 2.5
+  dend[1].diam = 1.6
+  dend[2].diam = 1.6
+  dend[3].diam = 2.5
+  dend[4].diam = 1.6
+  dend[5].diam = 1.6
+
+  forall { nseg=1 cm = 2.2125 Ra=200 }
+
+
+  soma gabaa[0] = new GABAa(0.5)
+  dend[0] gabaa[1] = new GABAa(0.5)
+  dend[3] gabaa[2] = new GABAa(0.5)
+
+  soma ampa[0] = new AMPA(0.5)
+  dend[1] ampa[1] = new AMPA(0.5)
+  dend[2] ampa[2] = new AMPA(0.5)
+  dend[4] ampa[3] = new AMPA(0.5)
+  dend[5] ampa[4] = new AMPA(0.5)
+
+  soma    stim[0] = new Exp2Syn(0.5)
+  dend[1] stim[1] = new Exp2Syn(0.5)
+  dend[4] stim[2] = new Exp2Syn(0.5)
+
+  synlist=new List()
+  for ii=0,4 synlist.append(ampa[ii])    // 0
+  for ii=0,2 synlist.append(gabaa[ii])   // 5
+  for ii=0,2 synlist.append(stim[ii])    // 8
+  slist=new List()
+  for ii=0,4 slist.append(new String("AMPA"))    // 0
+  for ii=0,2 slist.append(new String("GABAA"))   // 5
+  for ii=0,2 slist.append(new String("Exp2Syn"))    // 8
+}
+
+proc connect2target () {
+  soma $o2 = new NetCon(&v(0.5),$o1)
+  $o2.threshold=0.
+}
+
+func fflag () { return 0 }
+
+endtemplate Basket
+
+//* template Pyramidal (FP)
+begintemplate Pyramidal
+public soma, dend, pre, ampa, gabaa, gabab, nmda, fflag, stim, synlist,connect2target,slist
+public lid,gid
+
+// Reduced layer 5 pyramidal cell geometry, j4.cab.
+// Paul Bush 1991
+
+create soma, dend[8]
+objref pre, ampa[3], gabaa[3], gabab[3], nmda[3], stim[3], synlist, slist
+
+proc init() {
+
+  soma connect dend[0](0), 1
+  dend[0] connect dend[1](0), 1
+  dend[0] connect dend[2](0), 1
+  dend[2] connect dend[3](0), 1
+  dend[3] connect dend[4](0), 1
+  soma connect dend[5](0), 0
+  dend[5] connect dend[6](0), 1
+  dend[5] connect dend[7](0), 1
+
+  soma.L = 13
+  dend[0].L = 60
+  dend[1].L = 150
+  dend[2].L = 400
+  dend[3].L = 400
+  dend[4].L = 250
+  dend[5].L = 50
+  dend[6].L = 150
+  dend[7].L = 150
+
+  soma.diam = 18.95
+  dend[0].diam = 6
+  dend[1].diam = 3
+  dend[2].diam = 4.4
+  dend[3].diam = 2.9
+  dend[4].diam = 2
+  dend[5].diam = 4
+  dend[6].diam = 5
+  dend[7].diam = 5
+
+  forall { nseg=1 cm = 1.56 Ra=200 }
+
+  soma gabaa[0] = new GABAa(0.5)
+  dend[0] gabaa[1] = new GABAa(0.5)
+  dend[5] gabaa[2] = new GABAa(0.5)
+
+  dend[1] ampa[0] = new AMPA(0.5)
+  dend[6] ampa[1] = new AMPA(0.5)
+  dend[7] ampa[2] = new AMPA(0.5)
+
+  dend[1] nmda[0] = new NMDA(0.5)
+  dend[6] nmda[1] = new NMDA(0.5)
+  dend[7] nmda[2] = new NMDA(0.5)
+
+  dend[1] gabab[0] = new GABAb(0.5)
+  dend[6] gabab[1] = new GABAb(0.5)
+  dend[7] gabab[2] = new GABAb(0.5)
+
+  dend[1] stim[0] = new Exp2Syn(0.5)
+  dend[6] stim[1] = new Exp2Syn(0.5)
+  dend[7] stim[2] = new Exp2Syn(0.5)
+
+  synlist=new List()
+  for ii=0,2 synlist.append(ampa[ii])  // 0
+  for ii=0,2 synlist.append(nmda[ii])  // 3
+  for ii=0,2 synlist.append(gabaa[ii]) // 6
+  for ii=0,2 synlist.append(gabab[ii]) // 9
+  for ii=0,2 synlist.append(stim[ii])  // 12
+
+  slist=new List()
+  for ii=0,2 slist.append(new String("AMPA"))  // 0
+  for ii=0,2 slist.append(new String("NMDA"))  // 3
+  for ii=0,2 slist.append(new String("GABAA")) // 6
+  for ii=0,2 slist.append(new String("GABAB")) // 9
+  for ii=0,2 slist.append(new String("Exp2Syn"))  // 12
+}
+
+proc connect2target () {
+  soma $o2 = new NetCon(&v(0.5),$o1)
+  $o2.threshold=0.
+}
+
+func fflag () { return 0 }
+
+endtemplate Pyramidal
+
+//* template Pyramidal2 (TP)
+begintemplate Pyramidal2
+public soma, dend, pre, ampa, gabaa, gabab, nmda, fflag, stim, synlist,connect2target,slist
+public lid,gid
+
+// Reduced layer 2 pyramidal cell geometry, j8.cab.
+// Paul Bush 1991
+
+create soma, dend[7]
+objref pre, ampa[3], gabaa[3], gabab[3], nmda[3], stim[3], synlist, slist
+
+proc init() {
+
+  soma connect dend[0](0), 1
+  dend[0] connect dend[1](0), 1
+  dend[0] connect dend[2](0), 1
+  dend[2] connect dend[3](0), 1
+  soma connect dend[4](0), 0
+  dend[4] connect dend[5](0), 1
+  dend[4] connect dend[6](0), 1
+
+  soma.L = 13
+  dend[0].L = 35
+  dend[1].L = 200
+  dend[2].L = 180
+  dend[3].L = 140
+  dend[4].L = 50
+  dend[5].L = 150
+  dend[6].L = 150
+
+  soma.diam = 15.6
+  dend[0].diam = 2.5
+  dend[1].diam = 2.3
+  dend[2].diam = 2.4
+  dend[3].diam = 2
+  dend[4].diam = 2.5
+  dend[5].diam = 1.6
+  dend[6].diam = 1.6
+
+  forall { nseg=1 cm = 2.065 Ra=200 }
+
+  soma gabaa[0] = new GABAa(0.5)
+  dend[0] gabaa[1] = new GABAa(0.5)
+  dend[4] gabaa[2] = new GABAa(0.5)
+
+  dend[1] ampa[0] = new AMPA(0.5)
+  dend[5] ampa[1] = new AMPA(0.5)
+  dend[6] ampa[2] = new AMPA(0.5)
+
+  dend[1] nmda[0] = new NMDA(0.5)
+  dend[5] nmda[1] = new NMDA(0.5)
+  dend[6] nmda[2] = new NMDA(0.5)
+
+  dend[1] gabab[0] = new GABAb(0.5)
+  dend[5] gabab[1] = new GABAb(0.5)
+  dend[6] gabab[2] = new GABAb(0.5)
+
+  dend[1] stim[0] = new Exp2Syn(0.5)
+  dend[5] stim[1] = new Exp2Syn(0.5)
+  dend[6] stim[2] = new Exp2Syn(0.5)
+
+  synlist=new List()
+  for ii=0,2 synlist.append(ampa[ii])    // 0 
+  for ii=0,2 synlist.append(nmda[ii])    // 3 
+  for ii=0,2 synlist.append(gabaa[ii])   // 6 
+  for ii=0,2 synlist.append(gabab[ii])   // 9 
+  for ii=0,2 synlist.append(stim[ii])    // 12
+  slist=new List()
+  for ii=0,2 slist.append(new String("AMPA"))  // 0
+  for ii=0,2 slist.append(new String("NMDA"))  // 3
+  for ii=0,2 slist.append(new String("GABAA")) // 6
+  for ii=0,2 slist.append(new String("GABAB")) // 9
+  for ii=0,2 slist.append(new String("Exp2Syn"))  // 12
+}
+
+proc connect2target () {
+  soma $o2 = new NetCon(&v(0.5),$o1)
+  $o2.threshold=0.
+}
+
+func fflag () { return 0 }
+
+endtemplate Pyramidal2
+
+// sytyp(CELL,STYPE,VEC)
+// sytyp(fp[0],AM,vec) vec will get indices for postsyns that use AMPA
+proc sytyp () { local x
+  revec($o3)
+  for ltr(XO,$o1.slist,&x) if (strcmp(XO.s,STYP.o($2).s)==0) $o3.append(x)
+}

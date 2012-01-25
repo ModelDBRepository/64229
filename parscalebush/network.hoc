@@ -1,0 +1,133 @@
+// $Id: network.hoc,v 1.2 2006/02/08 11:59:39 hines Exp $
+
+//* network parameters
+scale=1
+{fpnum = scale*100 idfp=0}
+{tpnum = scale*300 idtp=idfp+fpnum}
+{b5num = scale*100 idb5=idtp+tpnum}
+{stimnum=1  idstim=idb5+b5num}
+allcells = fpnum+tpnum+b5num+stimnum
+{numc[FP]=fpnum numc[TP]=tpnum numc[B5]=b5num numc[SM]=stimnum}
+{ix[FP]=idfp ix[TP]=idtp ix[B5]=idb5 ix[SM]=idstim}
+objref cells,cell,fp[fpnum],tp[tpnum],bas5[b5num],nstim,ce,c[CTYPi]
+func fpid () { return idfp+$1 }
+func tpid () { return idtp+$1 }
+func b5id () { return idb5+$1 }
+func smid () { return idstim+$1 }
+func ctype () { // get cell type from gid
+  if ($1>=idfp && $1<idtp) return FP
+  if ($1>=idtp && $1<idb5) return TP
+  if ($1>=idb5 && $1<idstim) return B5
+  if ($1>=idstim && $1<allcells) return SM
+  printf("ctype INTERR\n") return -1
+}
+obfunc cobj () { // get the cell form the gid
+  if ($1>=idfp && $1<idtp) return fp[$1-idfp]
+  if ($1>=idtp && $1<idb5) return tp[$1-idtp]
+  if ($1>=idb5 && $1<idstim) return bas5[$1-idb5]
+  if ($1>=idstim && $1<allcells) return nstim // only 1
+  printf("cell INTERR\n") return nil
+}
+
+//* connectivity values
+for ii=0,CTYPi-1 for jj=0,CTYPi-1 for kk=0,STYPi-1 pmat[ii][jj][kk]=0.
+pmat[FP][FP][EX] = 0.1
+pmat[FP][TP][EX] = 0.1
+pmat[TP][FP][EX] = 0.1
+pmat[TP][TP][EX] = 0.1
+pmat[FP][B5][AM] = 0.1
+pmat[TP][B5][AM] = 0.1
+pmat[B5][FP][GA] = 0.12
+pmat[B5][FP][GB] = 0.03
+pmat[B5][TP][GA] = 0.15
+pmat[B5][TP][GB] = 0.03
+pmat[SM][FP][E2] = 0.8
+pmat[SM][TP][E2] = 0.8
+pmat[SM][B5][E2] = 0.7
+
+wmat[FP][FP][AM] = 0.002/scale
+wmat[FP][FP][NM] = 0.001/scale
+wmat[FP][TP][AM] = 0.002/scale
+wmat[FP][TP][NM] = 0.0005/scale
+wmat[FP][B5][AM] = 0.001/scale
+wmat[TP][FP][AM] = 0.002/scale
+wmat[TP][FP][NM] = 0.001/scale
+wmat[TP][TP][AM] = 0.001/scale
+wmat[TP][TP][NM] = 0.0005/scale
+wmat[TP][B5][AM] = 0.001/scale
+wmat[B5][FP][GA] = 0.004/scale
+wmat[B5][FP][GB] = 0.00015/scale
+wmat[B5][TP][GA] = 0.015/scale
+wmat[B5][TP][GB] = 0.0004/scale
+wmat[SM][FP][E2] = 0.06/scale
+wmat[SM][TP][E2] = 0.05/scale
+wmat[SM][B5][E2] = 0.02/scale
+
+celln=-1
+ce=new List()
+
+//* procedures
+obfunc create_cell () { localobj s
+  celln+=1
+  s=new String()
+  sprint(s.s,"ce.append(%s)",$s1)
+  execute(s.s)
+  return ce.object(ce.count-1)
+}
+
+for i = 0, fpnum-1 { // fp[i] = new Pyramidal(i,30)
+  sprint(tstr,"new Pyramidal(%d,30)",i)
+  fp[i]=create_cell(tstr)
+}
+
+for i = 0, tpnum-1 { // tp[i] = new Pyramidal2(i,30)
+  sprint(tstr,"new Pyramidal2(%d,30)",i)
+  tp[i]=create_cell(tstr)
+}
+
+for i = 0, b5num-1 { // bas5[i] = new Basket(i,30) 
+  sprint(tstr,"new Basket(%d,30)",i)
+  bas5[i]=create_cell(tstr)
+}
+
+nstim=create_cell("new SStim()")
+
+proc nc_append () { 
+  if (ce.o(PR).fflag) {
+    ncl.append(new NetCon(ce.o(PR).pp,ce.o(PO).synlist.o(SID),-10,DEL,WT))
+  } else {
+    ce.o(PR).soma ncl.append(new NetCon(&v(0.5),ce.o(PO).synlist.o(SID),-10,DEL,WT))
+  }
+}
+
+// sp=new NQS("data/net05jul29.nqs")
+PR=PO=SID=WT=DEL=0
+proc connall () {  local x,y,z,ii,sn
+  sn=0
+  for case(&y,FP,TP,B5) for case(&x,SM,FP,TP,B5) for case(&z,AM,GA,GB,EX,E2) {
+    sn+=pmat[x][y][z]*numc[x]*numc[y] } // how many synapses -- del numc[y] for mult CPU
+  if (myid == 0) printf("Expect %d synapses\n",round(sn))
+  sp[2].pad(1.1*sn) // big enough
+  sp[2].clear // resize to 0
+  for ii=0,allcells-1 { // outer loop iterates through all postsyn cells
+    if (myid == 0) if (ii%100==0) printf("%d ",ii)
+    y=ctype(ii)
+    for case(&x,SM,FP,TP,B5) for case(&z,AM,GA,GB,EX,E2) {
+      if (pmat[x][y][z]!=0) {
+        mkpomat(x,y,z,ii) 
+        sp[2].grow(sp)
+      }
+    }
+  }
+  rdsp(sp[2])
+}
+
+proc rdsp () {
+  for ii=0,$o1.size(1)-1 {
+    PR=$o1.v[0].x[ii] PO=$o1.v[1].x[ii] SID=$o1.v[2].x[ii]
+    WT=$o1.v[3].x[ii] DEL=$o1.v[4].x[ii]
+    nc_append()
+  }
+}
+
+connall()

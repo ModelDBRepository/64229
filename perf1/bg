@@ -1,0 +1,61 @@
+bg() {
+	echo "bg $1 $2 $3"
+	sed "
+s/^ncell = 1000$/ncell = $2/
+s/^ncon = 100$/ncon = $3/
+/^pnm.prstat/d
+/^want_all_spikes/d
+/^pnm.gatherspikes/d
+/^spike2file/d
+" < init.hoc > init_.hoc
+bgrun $5 $4 $1 init_.hoc
+mv temp.$1 temp$5$1.$2.$3
+}
+
+if test "$1" != "" ; then
+	bg $1 $2 $3 $4 $5
+else
+
+if false ; then # for testing
+bg 10 1000 100 R1000
+#bg 10 1000 100 R1000 VN
+#bg 20 1000 1000 R1000
+#bg 20 2000 100 R1000
+#bg 50 10000 1000 R1000
+fi
+
+if false ; then
+
+bg 128 262144 1000 R000 timed out
+bg 256 262144 1000 R000 timed out
+bg 512 262144 1000 R000
+bg 1024 262144 1000 R00
+
+bg 8192 262144 10000 R_32 VN
+bg 4096 262144 10000 R_32
+bg 2048 262144 10000 R0
+bg 1024 262144 10000 R00
+
+bg 8192 1048576 10000 R_32 VN
+bg 4096 1048576 10000 R_32
+bg 2048 1048576 10000 R0
+
+fi
+
+if false ; then
+
+bg 128 65536 1000 R000
+bg 256 65536 1000 R000
+bg 512 65536 1000 R000
+bg 1024 65536 1000 R00
+
+bg 8192 262144 10000 R_32 VN
+bg 4096 262144 10000 R_32
+bg 2048 262144 10000 R0
+bg 1024 262144 10000 R00
+#bg 512 262144 10000 R000 # too large
+fi
+
+bg 128 65536 1000 R1000
+
+fi

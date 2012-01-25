@@ -1,0 +1,16 @@
+Davison AP, Feng J, Brown D (2003) Dendrodendritic inhibition and
+simulated odor responses in a detailed olfactory bulb network model. J
+Neurophysiol 90:1921-1935
+
+http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=2730
+
+2525 cells
+  25 Mitral, 7 compartments, 7 mechanisms
+  2500 Granule, 5 compartments, 4 mechanisms
+  48476 States
+
+15000 NetCon into 2550 ExpSyn and 2500 NMDA
+
+run for the ddi_baseline experiment
+
+1500 ms, 6267 spikes generated, 47838 spikes delivered

@@ -1,0 +1,49 @@
+load_file("nrngui.hoc")
+
+begintemplate Curve
+public x, y, label
+objref x, y
+proc init() {
+	label = 0
+	x = new Vector()
+	y = new Vector()
+}
+endtemplate Curve
+
+objref f, c, clist
+clist = new List()
+proc rd() {local i, j, n, m
+	f = new File()
+	f.ropen("nspike.dat")
+	n = f.scanvar()
+	for i=0,n-1 {
+		c = new Curve()
+		clist.append(c)
+		m = f.scanvar()
+		for j=0, m-1 {
+			c.label = f.scanvar()
+			c.x.append(f.scanvar())
+			f.scanvar()
+			c.y.append(f.scanvar())
+		}
+	}
+	f.close()
+	for i=0, 6 {
+		clist.object(i).x.remove(0)
+		clist.object(i).y.remove(0)
+	}
+}
+rd()
+
+objref g
+g = new Graph()
+g.size(0,1e6, 0, 20)
+
+proc gr() {local i
+	for i=0, clist.count-1 {
+		clist.object(i).y.line(g, clist.object(i).x)
+	}
+}
+gr()
+
+// load_file("x_vs_nspike.ses") // instead see last part of nspike.dat

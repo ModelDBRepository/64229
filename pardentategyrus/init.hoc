@@ -1,0 +1,81 @@
+load_file("nrngui.hoc")
+create acell_home_
+access acell_home_
+
+load_file("netparmpi.hoc")
+objref pnm
+load_file("perfrun.hoc")
+
+ncell = 528
+pnm = new ParallelNetManager(ncell)
+objref wf
+proc metis() {
+if (pnm.nhost == 24) {
+	wf = new File("soltesz.graph.part.24")
+	wf.ropen()
+	for i=0, ncell-1 {
+		pnm.set_gid2node(i, wf.scanvar)
+	}
+	wf.close()
+}
+}
+//metis()
+pnm.round_robin()
+
+objref con_mat
+con_mat = new Matrix(ncell, ncell, 2)
+
+cells_count = 0
+
+obfunc createcell() {
+	cells_count += 1
+	return pnm.create_cell(cells_count-1, $s1)
+}
+
+proc nc_append() {
+	con_mat.x[$1][$2] += 1
+	pnm.nc_append($1, $2, $3, $4, $5)
+}
+
+func is_connected() {local c
+        c = con_mat.getval($3+$4, $1+$2)
+        return (c != 0)
+}
+
+load_file("parRI10sp.hoc")
+nclist = pnm.nclist
+
+setuptime = startsw()
+pnm.want_all_spikes()
+initNet()
+setuptime = startsw() - setuptime
+
+//if (pnm.nhost == 1) { saveNet() }
+
+objref mxhist
+mxhist = new Vector(25)
+pnm.pc.max_histogram(mxhist)
+
+//tstop = 10
+if (pnm.myid == 0) {print "SetupTime: ", setuptime}
+if (name_declared("mosinit")) { stop }
+quit()
+prun()
+if (pnm.myid == 0) {print "RunTime: ", runtime}
+//if (pnm.nhost == 1) { SpkMx() }
+
+pnm.pc.runworker()
+
+pnm.prstat(1)
+
+{pnm.gatherspikes()}
+getstat()
+pnm.pc.done()
+
+for i=0, mxhist.size-1 {
+        printf("%d\t %d\n", i, mxhist.x[i])
+}
+
+spike2file()
+perf2file()
+quit()

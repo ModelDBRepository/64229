@@ -1,0 +1,92 @@
+load_file("nrngui.hoc")
+load_file("stdlib.hoc")
+
+mosinit=1
+objref b_
+b_ = new VBox()
+b_.intercept(1)
+b_.save("")
+xpanel("")
+xbutton("Santhakumar et. al.", "parden_launch()")
+xbutton("Davison et. al. (> 1 minute setup)", "parbulb_launch()")
+xbutton("Bush et. al.", "parbush_launch()")
+xpanel()
+b_.intercept(0)
+b_.map("Figure 4 Launch model", 100, 200, 200, 200)
+
+objref mesg_box_
+strdef mesg_string_
+mesg_string_ = "Select a model to load mod files and setup. This will take a few seconds."
+mesg_box_ = new VBox()
+mesg_box_.intercept(1)
+mesg_box_.save("")
+xpanel("")
+xvarlabel(mesg_string_)
+xpanel()
+mesg_box_.intercept(0)
+doNotify()
+
+proc parden_launch() { localobj s
+	s = new String()
+	s.s = "Santhakumar et. al. model"
+	if (mkdll_("pardentategyrus", s.s)) {
+		load_file("init.hoc")
+		setup_(s.s)
+	}
+}
+
+proc parbulb_launch() { localobj s
+	s = new String()
+	s.s = "Davison et. al. model"
+	if (mkdll_("parbulbNet", s.s)) {
+		load_file("par_batch1.hoc")
+		setup_(s.s)
+	}
+}
+
+proc parbush_launch() { localobj s
+	s = new String()
+	s.s = "Bush et. al. model"
+	if (mkdll_("parbush", s.s)) {
+		load_file("batch_.hoc")
+		setup_(s.s)
+	}
+}
+
+func mkdll_() { localobj s, f
+	b_.unmap()
+	doNotify()
+	mesg_($s2, ": building dynamically loadable library")
+	s = new String()
+	sprint(s.s, "sh mkdll.sh %s %d", $s1, unix_mac_pc())
+	system(s.s, s.s)
+	f = new File()
+	if (f.ropen("mkdll.result")) {
+		if (f.gets(s.s) > 1) {
+			hoc_sf_.left(s.s, hoc_sf_.len(s.s) - 1)
+			mesg_("Loading ", s.s)
+			nrn_load_dll(s.s)
+			chdir($s1)
+			sprint(s.s, "Setting up %s in %s", $s2, $s1)
+			mesg_(s.s, " (may take some time)")
+			return 1
+		}
+	}
+	mesg_($s2, ": dll build failed. Exit and handle manually")
+	return 0
+}
+
+proc setup_() { localobj s
+	s = new String()
+	sprint(s.s, " setup time is %g sec", setuptime)
+	mesg_($s1, s.s)
+}
+
+proc mesg_() {
+	if (!mesg_box_.ismapped()) {
+		mesg_box_.map("Progress Message", 100, 200, 600, 50)
+		doNotify()
+	}
+	sprint(mesg_string_, "%s %s", $s1, $s2)
+	doNotify()
+}

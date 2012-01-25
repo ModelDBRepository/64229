@@ -1,0 +1,73 @@
+// $Id: run.hoc,v 1.3 2006/02/08 13:15:51 hines Exp $
+
+//method("local")
+ method("implicit",0.025)
+
+objref fih
+fih = new FInitializeHandler("send()")
+proc send() {}
+// proc send () { cvode.event(220,"clr198()") }
+// proc clr198 () { for ltr(svnc) XO.weight=0 }
+
+//* init procedure
+proc init() {
+    vseed(seed)
+    finitialize(v_init)
+    fcurrent()
+  }
+
+//* graphics
+//** a()
+proc a () { local sh
+    if (!isobj(g,"Graph")) gg()
+    if (!isobj(aa,"Graph")) aa=g else g=aa
+    if (aa.view_count==0) aa.view(0,1,0,1,100,100,400,300)
+    graphItem=g
+    sh=0 panobj.super=1 g.erase_all
+    panobj.gveraseflag=0  panobj.gvmarkflag=panobj.super=1 // gnum=0
+    gv(0,3+sh,4) gv(1,2+sh,4) gv(2,4+sh,4)
+    panobj.gvmarkflag=0 panobj.super=0 // gnum=1
+    g.exec_menu("View = plot")
+  }  
+
+//** prl()
+proc prl () { local n
+    printlist.remove_all
+    n=0
+  //  new_printlist_nc(fp[0],n,"FP")
+    for ii=0,fpnum-1 new_printlist_nc(fp[ii],fpid(ii))
+    n+=10
+  //  new_printlist_nc(tp[0],n,"TP")
+    for ii=0,tpnum-1 new_printlist_nc(tp[ii],tpid(ii))
+    n+=10
+  //  new_printlist_nc(bas5[0],n,"BAS")
+    for ii=0,b5num-1 new_printlist_nc(bas5[ii],b5id(ii))
+  
+    new_printlist_item("fp[0].soma.v(0.5)")
+    new_printlist_item("fp[11].soma.v(0.5)")
+    new_printlist_item("fp[50].soma.v(0.5)")
+    new_printlist_item("tp[0].soma.v(0.5)")
+    new_printlist_item("tp[150].soma.v(0.5)")
+    new_printlist_item("tp[198].soma.v(0.5)")
+    new_printlist_item("tp[198].dend[2].v(0.5)")
+    new_printlist_item("tp[206].soma.v(0.5)")
+    new_printlist_item("bas5[0].soma.v(0.5)")
+    new_printlist_item("bas5[90].soma.v(0.5)")
+  }
+
+//* utility program -- spktimes()
+func spktimes () { local sz,wh localobj va,vb 
+  va=new Vector() vb=new Vector() 
+  if (numarg()>=1) XO=printlist.object($1) else XO=printlist.object(0)
+  sz=XO.vec.size
+  if (numarg()>=2) {
+    wh=$2
+    va.indvwhere(XO.vec,"==",wh)
+    vb.index(XO.tvec,va)
+    sz=vb.size
+    if (numarg()>=3) $o3.copy(vb) else vlk(vb)
+  } else vlk(XO.tvec,XO.vec) 
+  return sz
+}
+
+//prl()

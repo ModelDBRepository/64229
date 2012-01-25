@@ -1,0 +1,86 @@
+// $Id: params.hoc,v 1.3 2006/02/08 15:05:46 hines Exp $
+
+//* general params
+seed=3492
+{vseed(seed)}
+
+celsius = 37
+dt = 1e-3
+secondorder = 2
+tstop = 500
+runStopAt = tstop
+steps_per_ms = 10
+global_ra = 200
+v_init = -60
+erest = -60
+irest = -60
+
+//* conductances
+gadjust3 = 1
+gadjust = 0.4
+sadjust = 2
+gadjust2 = 0.45
+
+proc fppm () { local i,j
+    for i = 0, fpnum-1 if (pc.gid_exists(idfp + i)) {
+        fp[i].soma { 
+            insert fastpas   g_fastpas=0.000142*gadjust e_fastpas=erest+1
+            insert na     gmax_na=0.04*sadjust 
+            insert kdr    gmax_kdr=0.03*sadjust    mbaserate_kdr=0.05 
+          }
+        fp[i].dend[2] { 
+            insert nap gmax_nap = 0.015 
+            insert kdrp gmax_kdrp = 0.03 
+          }
+        for j=0,7 fp[i].dend[j] { 
+            insert fastpas     g_fastpas = 0.000142*gadjust     e_fastpas = erest+1 
+          }
+      }
+  }
+
+proc tppm () { local i,j
+    for i = 0, tpnum-1 if (pc.gid_exists(idtp + i)) { 
+        tp[i].soma { 
+            insert fastpas g_fastpas = 0.0001475*gadjust2  e_fastpas=erest-1 
+            insert na gmax_na=0.03 
+            insert kdr gmax_kdr=0.02 mbaserate_kdr=0.015 
+            insert cah gmax_cah = 0.001 
+            insert cadecay 
+            insert kca gmax_kca = 0.001
+          }
+        for j=0,6 tp[i].dend[j] { 
+            insert fastpas g_fastpas=0.0001475*gadjust2  e_fastpas=erest 
+          }
+      }
+  }
+
+proc b5pm () { local i,j
+    for i=0,b5num-1 if (pc.gid_exists(idb5 + i)) { 
+        bas5[i].soma { 
+            insert fastpas g_fastpas = 0.0001475*gadjust3 e_fastpas = irest-1
+            insert na gmax_na=0.08 
+            insert kdr gmax_kdr=0.09
+          }
+        for j=0,5 bas5[i].dend[j] { 
+            insert fastpas g_fastpas=0.0001475*gadjust3   e_fastpas=irest
+          }
+      }
+    
+    for i=84,b5num-1 if (pc.gid_exists(idb5 + i)) {
+        bas5[i].soma { 
+            insert cah gmax_cah=0.0005 
+            insert cadecay taucaremov_cadecay = 100 
+            insert kca gmax_kca=0.0025
+          }
+      }
+  }
+
+fppm()
+tppm()
+b5pm()
+
+//* add extrinsic inputs
+if (pc.gid_exists(idstim)) {
+	nstim.pp.start=2
+	nstim.pp.number=1
+}

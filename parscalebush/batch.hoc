@@ -1,0 +1,15 @@
+// $Id: batch.hoc,v 1.2 2006/02/08 11:59:39 hines Exp $
+
+myid = 0
+load_file("prebatch_.hoc")
+load_file("nqsnet.hoc")
+load_file("geom.hoc")
+load_file("network.hoc")
+load_file("params.hoc")
+load_file("run.hoc")
+
+time()
+gg()
+panobj.gvmarkflag=1
+a()
+g.exec_menu("View = plot")

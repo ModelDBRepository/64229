@@ -1,0 +1,24 @@
+parbush, parbulbNet, and pardentategyrus contain the original and parallelized
+versions of the ModelDB models used in fig 4 of
+Migliore, Cannia, Lytton, Markram, and Hines (2006)
+Parallel Network Simulations with NEURON
+J. Comput. Neurosci. 21:110-119
+i.e.
+http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=52034
+http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=2730
+http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=51781
+
+The parscalebush directory contains the extended Bush model used to
+develop fig 5.
+
+The perf1 directory contains the artificial spikeing net model used to
+develop fig 6.
+
+Note: for autolaunch from ModelDB, after the choice of which of the three
+figure 4 models to run, an attempt is made to do the appropriate
+nrnivmodl or mknrndll and dynamically load the shared library or dll.
+In those three directories, see the test1.sh files for an example of how
+these simulations were run in parallel. When executed, an out.dat file
+containing the spike pattern is created as well as some performance information
+written to the perf.dat file.
+

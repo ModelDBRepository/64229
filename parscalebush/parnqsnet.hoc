@@ -1,0 +1,221 @@
+// $Id: parnqsnet.hoc,v 1.2 2006/02/11 13:34:17 hines Exp $
+
+// load_file("nqsnet.hoc")
+objref sp[5],nq[5]
+datestr="06feb04"
+scale=1 // redefined in network.hoc
+double pmat[CTYPi][CTYPi][STYPi],numc[CTYPi],ix[CTYPi],wmat[CTYPi][CTYPi][STYPi]
+obfunc cobj(){} // return cell given gid (defined in network.hoc)
+
+//* routines
+//** styp() sets synapse type based on presynaptic cell
+func styp () { local pr,po
+  pr=$1 po=$2
+  if (pr==IN && po==IN) { return GA 
+  } else if (pr==IN) { return IH
+  } else if (pr==SU) { return EX
+  } else if (pr==SM) { return AM
+  } else printf("styp ERR %s->%s not classified",CTYP.object(pr).s,CTYP.object(po).s)
+}
+
+for ii=0,2 {sp[ii]=new NQS("PR","PO","SID","WT","DEL") sp[ii].clear(1e5*scale)}
+batch_flag=1
+for ii=0,2 sp[ii].mo(1)
+batch_flag=0
+// mkspmat() uses sp and sp[1], returns sp
+proc mkspmat () { local a,sn,ii,jj,n,x,y,z,z1 localobj vr,vo
+  x=$1 y=$2 z=$3
+  rdm.ACG(903342)
+  a=allocvecs(vr,vo)
+  sn=pmat[x][y][z]*numc[x]*numc[y] // number of synapses
+  for ii=0,1 sp[ii].clear
+  sp.mo(2)
+  sp.pad(1.5*sn) // leave room
+  rdm.discunif(ix[x],ix[x]+numc[x]-1) // randomly chosen presynaptic cells
+  PRv.setrand(rdm)
+  rdm.discunif(ix[y],ix[y]+numc[y]-1)  // randomly chosen postsynaptic cells
+  POv.setrand(rdm)
+  if (z==EX) z1=AM else z1=z  
+  sytyp(c[y],z1,vr) // will want to replace this since got rid of c[]
+  SIDv.vfill(vr)
+  rdm.normal(wmat[x][y][z1],(0.5*wmat[x][y][z1])^2) // calc random weights
+  WTv.setrand(rdm)   // set the weight column
+  rdm.normal(2.2,0.1) // random delays
+  DELv.setrand(rdm)    
+  sp.elimrepeats("PR","PO","SID") // so don't have 2 connections between same cells
+  sp.shuffle()  // randomize again
+  sp.pad(sn) // reduce the length down to desired
+  if (z==EX) { // now have to repeat everything, also will need for IX
+    z1=NM
+    sp[1].mo(2) // reset the PRv,POv,... pointers
+    sp[1].cp(sp) // this will be the same as prior
+    rdm.normal(wmat[x][y][z1],(0.5*wmat[x][y][z1])^2)
+    WTv.setrand(rdm)
+    sytyp(c[y],z1,vo) // vo and vr represent list indices for cell synlists
+    vo.sub(vr) // difference between the NMDA synnums and AMPA synnums
+    if (! vo.ismono(0)){ printf("mkspmat ERRA\n") return }
+    SIDv.add(vo.x[0])
+    sp.grow(sp[1])
+  }
+  sp.mo(2) // reset the PRv,POv,... pointers
+  WTv.negwrap() // take any neg weights and make them positive
+  dealloc(a)
+}
+
+// mkpomat() only make the array for a single postsynaptic cell
+proc mkpomat () { local a,sn,ii,jj,n,x,y,yid,z,z1 localobj vr,vo
+  x=$1 y=$2 z=$3 yid=$4
+  // rdm.ACG(903342)
+  // We want to have a postsynaptic gid specific stream but streams from
+  // different gids should be statistically independent.
+  // A stream is random but we want to be able to reproduce it at will
+  // Assume this is the only place where this is required
+  mcell_ran4_init(yid) // for independent sims add offset > i*allcells
+  rdm.MCellRan4(1) //avoid 0 want to always start at known seed
+  a=allocvecs(vr,vo)
+  sn=pmat[x][y][z]*numc[x]*1 // number of synapses
+  if (sn<1) { // treat sn<1 as a prob of connecting rather than a density
+    if (rdm.uniform(0,1)<sn) sn=1 else sn=0 // flip coin
+  } else if (sn<5) sn=round(sn) // possibly round it up
+  for ii=0,1 sp[ii].clear
+  if (sn==0) { dealloc(a) return }
+  sp.mo(2)
+  sp.pad(1.5*sn) // leave room
+  rdm.discunif(ix[x],ix[x]+numc[x]-1) // randomly chosen presynaptic cells
+  PRv.setrand(rdm)
+  POv.fill(yid)
+  if (z==EX) z1=AM else z1=z  
+  sytyp(cobj(yid),z1,vr) // brief syncode.hoc routine translates synaptic types
+  SIDv.vfill(vr)
+  rdm.normal(wmat[x][y][z1],(0.5*wmat[x][y][z1])^2) // calc random weights
+  WTv.setrand(rdm)   // set the weight column
+  rdm.normal(2.2,0.1) // random delays
+  DELv.setrand(rdm)    
+  sp.elimrepeats("PR","PO") // so don't have 2 connections between same cells
+  sp.shuffle()  // randomize again
+  sp.pad(sn) // reduce the length down to desired
+  if (z==EX) { // now have to repeat everything, also will need for IX
+    z1=NM
+    sp[1].mo(2) // reset the PRv,POv,... pointers
+    sp[1].cp(sp) // this will be the same as prior
+    rdm.normal(wmat[x][y][z1],(0.5*wmat[x][y][z1])^2)
+    WTv.setrand(rdm)
+    sytyp(cobj(yid),z1,vo) // vo and vr represent list indices for cell synlists
+    vo.sub(vr) // difference between the NMDA synnums and AMPA synnums
+    if (! vo.ismono(0)){ printf("mkspmat ERRA\n") return }
+    SIDv.add(vo.x[0])
+    sp.grow(sp[1])
+  }
+  sp.mo(2) // reset the PRv,POv,... pointers
+  WTv.negwrap() // take any neg weights and make them positive
+  dealloc(a)
+}
+
+proc mkall () {  local x,y,z localobj fname
+  fname=new String()
+  for case(&y,FP,TP,B5) { // FP,TP,B5
+    sp[2].clear
+    for case(&x,SM,FP,TP,B5) for case(&z,AM,GA,GB,EX,E2) {
+      if (pmat[x][y][z]!=0) {
+        mkspmat(x,y,z) 
+        sp[2].grow(sp)
+      }
+    }
+    sprint(fname.s,"data/%s%sS%02d.nqs",datestr,CTYP.o(y).s,scale)
+    sp[2].sv(fname.s)
+  }
+}
+
+// nqs2txt()
+proc nqs2txt () { local ii,last,lnum,n,fl1 localobj f,fn
+  nq=new NQS("GID","LINE","NUML","TELL")
+  fn=new String()
+  fl1=lnum=n=0
+  f=new File()
+  sprint(tstr,"data/%sS%02d.syns",datestr,scale)
+  f.wopen(tstr)
+  for case(&y,FP) { // FP,TP,B5 need proper order
+    sprint(fn.s,"data/%s%sS%02d.nqs",datestr,CTYP.o(y).s,scale)
+    sp.rd(fn.s)
+    sp.sort("SID") sp.sort("PR") sp.sort("PO")
+    if (fl1==0) {  
+      last=sp.v[1].x[0]
+      nq.append(last,lnum+1,-1,f.tell)
+      fl1=1
+    }
+    for ii=0,sp.size(1)-1 {
+      PR=sp.v[0].x[ii] PO=sp.v[1].x[ii] SID=sp.v[2].x[ii] WT=sp.v[3].x[ii] DEL=sp.v[4].x[ii]
+      if (PO==last) {
+        lnum+=1 n+=1
+        f.printf("%d %d %d %g %g\n",PO,PR,SID,WT,DEL)
+      } else {
+        nq.set("NUML",-1,n)
+        n=0
+        if (PO==last+1) {
+          nq.append(PO,lnum+1,-1,f.tell+1)
+        } else { 
+          printf("%d is not a target\n")
+          nq.append(PO,lnum+1,0,f.tell+1)
+        }
+        last=PO
+        ii-=1 // do this one again
+      } 
+    }
+    nq.set("NUML",-1,n)
+  }
+  sprint(tstr,"data/%sS%02d.index",datestr,scale)
+  f.wopen(tstr)
+  for ii=0,nq.size(1)-1 {
+    f.printf("%d %d %d %d\n",nq.v[0].x[ii],nq.v[1].x[ii],nq.v[2].x[ii],nq.v[3].x[ii])
+  }
+  f.close
+}
+
+// nqssplit() // divide into multiple smaller files
+proc nqssplit () { local ii,last,lnum,n,fl1 localobj f,fn
+  fn=new String()
+  fl1=lnum=n=0
+  f=new File()
+  for case(&y,FP,TP,B5) {
+    sprint(fn.s,"data/%s%sS%02d.nqs",datestr,CTYP.o(y).s,scale)
+    sp.rd(fn.s)
+    sp.sort("PO")
+    for (ii=ix[y];ii<ix[y]+numc[y];ii+=200) {
+      sp.select("PO","[]",ii,ii+200-1)
+      sprint(tstr,"data/S%dzip/%s_%d-%d_S%02d.nqs",scale,datestr,ii,ii+200-1,scale)
+      sp.out.sv(tstr)
+    }
+  }
+}
+
+proc ncl2mat () { local ii,wt,del,pc,pr,po,prid,poid,ps,sy,syn localobj Xo
+  if (!isassigned(sp)) {
+    sp=new NQS("PRID","POID","PR","PO","SYNID","DEL","WT0","THRESH") }
+  for ii=0,ncl.count-1 { 
+    Xo=ncl.o(ii)
+    pc=id(Xo.pre) prid=id(Xo.precell) sy=id(Xo.syn) poid=id(Xo.postcell)
+    pr=ojtnum(Xo.precell) po=objnum(Xo.postcell)
+    if (!isojt(Xo.postcell,nil)) syn=Xo.postcell.synlist.index(Xo.syn)
+    if (poid==-1 && sy==-1) {  // nil targ
+    } else if (poid==-1) { // ACELL targ -- not implemented
+    } else if (prid==-1) { // ACELL src
+      sp.append(pc,poid,ojtnum(Xo.pre),po,syn,Xo.delay,Xo.weight,Xo.threshold)
+    } else {
+      sp.append(prid,poid,pr,          po,syn,Xo.delay,Xo.weight,Xo.threshold)
+    }
+  }
+}
+
+//* fill everything in and save it
+// mksfc()     // synfire chain
+// ncl2mat()
+// mkall()
+
+// go to global id's -- can leave fp alone since starts at 0
+proc rel2glbl () {
+  sp.select("PRID",TP) sp.spr("<PR>.add(idtp)") sp.delect()
+  sp.select("POID",TP) sp.spr("<PO>.add(idtp)") sp.delect()
+  sp.select("PRID",B5) sp.spr("<PR>.add(idb5)") sp.delect()
+  sp.select("POID",B5) sp.spr("<PO>.add(idb5)") sp.delect()
+  sp.select("PRID",SM) sp.spr("<PR>.add(idstim)") sp.delect()
+}

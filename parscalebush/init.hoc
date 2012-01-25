@@ -1,0 +1,47 @@
+{load_file("nrngui.hoc")}
+
+setuptime = startsw()
+create acell_home_
+access acell_home_
+objref pnm, pc
+{load_file("netparmpi.hoc")}
+pnm = new ParallelNetManager(0)
+pc = pnm.pc
+myid = pnm.myid
+
+ncell = 500
+
+{load_file("prebatch_.hoc")}
+{load_file("parnqsnet.hoc")}
+{load_file("geom.hoc")}
+{load_file("parnetwork.hoc")}
+{load_file("params.hoc")}
+{load_file("run.hoc")}
+
+{load_file("perfrun.hoc")}
+want_all_spikes()
+mkhist(50)
+if (myid == 0) {printf("scale = %g\n", scale) }
+tstop = 500
+
+setuptime = startsw() - setuptime
+if (myid == 0) { print "\nSetupTime: ", setuptime }
+prun()
+if (myid == 0) { print "RunTime: ", runtime }
+
+{pnm.pc.runworker()}
+
+//{pnm.prstat(1)}
+getstat()
+{pnm.gatherspikes()}
+prhist()
+print_spike_stat_info()
+
+pnm.pc.done()
+
+perf2file()
+spike2file()
+{printf("ncell = %d tstop = %g\n", ncell, tstop)}
+
+quit()
+

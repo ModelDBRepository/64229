@@ -1,0 +1,82 @@
+bg() {
+	echo "bg $1 $2 $3"
+	sed "
+s/^ncell = 500$/ncell = $2/
+s/^tstop = 500$/tstop = $3/
+" < init.hoc > init_.hoc
+#/^want_all_spikes/d
+#/^pnm.gatherspikes/d
+#/^spike2file/d
+rm out.dat
+bgrun $5 $4 $1 init_.hoc
+mv temp.$1 temp$5$1.$2.$3
+if test -f out.dat ; then
+  sort -k 1n,1n -k 2n,2n out.dat > out$5$1.$2.$3
+fi
+}
+
+if test "$1" != "" ; then
+	bg $1 $2 $3 $4 $5
+else
+
+if false ; then
+
+bg 500 50000 200 R100
+bg 1000 50000 200 R100 VN
+bg 250 50000 200 R100
+#bg 125 50000 200 R1000
+
+fi
+
+if false ; then
+
+bg 50 10000 200 R1000
+bg 125 10000 200 R1000
+bg 250 10000 200 R100
+bg 500 10000 200 R100
+bg 1000 10000 200 R101 VN
+bg 1000 10000 200 R10
+bg 2000 10000 200 R10 VN
+bg 2000 10000 200 R0
+
+bg 125 20000 200 R1003
+bg 250 20000 200 R1000 VN
+bg 500 20000 200 R101
+bg 1000 20000 200 R101 VN
+bg 1000 20000 200 R10
+bg 2000 20000 200 R10 VN
+bg 4000 20000 200 R0 VN
+
+#bg 250 40000 200 R100 out of memory
+bg 500 40000 200 R100
+bg 1000 40000 200 R10
+bg 2000 40000 200 R10 VN
+bg 4000 40000 200 R0 VN
+
+#bg 500 80000 200 R100 out of memory
+bg 1000 80000 200 R10
+bg 2000 80000 200 R10 VN
+bg 4000 80000 200 R0 VN
+
+bg 4000 160000 200 R0 VN out of memory
+
+fi
+
+if true ; then
+
+
+bg 8000 40000 200 R_32 VN
+bg 4000 40000 200 R_32
+
+bg 8000 80000 200 R_32 VN
+bg 4000 80000 200 R_32
+
+bg 8000 160000 200 R_32 VN
+bg 4000 160000 200 R_32
+
+bg 4000 20000 200 R_32
+
+fi
+
+
+fi

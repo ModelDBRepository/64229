@@ -1,0 +1,16 @@
+Bush PC, Prince DA, Miller KD (1999) Increased pyramidal excitability
+and NMDA conductance can explain posttraumatic epileptogenesis without disinhibition
+ a model. J Neurophysiol 82:1748-58
+
+http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=52034
+
+500 cells
+  100 Pyramidal, 9 compartments, 5 mechanisms
+  300 Pyramidal2, 8 compartments, 6 mechanisms
+  100 Basket, 7 compartments, 3 mechanisms
+  22165 States
+
+41380 NetCon into 7100 Synapses
+(1500 Net2Syn, 1700 AMPA, 1500 GABAa, 1200 GABAb, 1200 NMDA)
+
+500 ms, 3493 spikes generated, 275,386 spikes delivered

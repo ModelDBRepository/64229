@@ -1,0 +1,116 @@
+Notes on the transformation of bulbNet for simulation on a parallel
+computer.
+http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=2730
+
+The normal simulation from
+nrngui init.hoc
+and then selection of the "Response to olfactory nerve shock (Fig.2)"
+runs a simulation that take more that 1500 seconds on a 3GHz linux pc.
+
+Try to use a small model. We'll need to run at least 50 times before the
+parallel version matches the serial version.
+
+1)
+Change minimally so we can run in batch mode and
+so we get the same results each time we run.
+
+See *_batch1.hoc for doing a batch run with a particular tstop.
+
+Setting up the ddi_baseline experiment and immediately exiting results in
+time nrngui batch1.hoc
+...
+real    0m47.006s
+user    0m46.244s
+sys     0m0.086s
+
+Setting tstop to 50 and then run() followed by saving the results gives
+setuptime=47.87   runtime=68.77
+real    1m56.855s
+user    1m55.334s
+sys     0m0.091s
+
+Running several times produces exactly the same outputfiles. However
+there are many uses of Random in the bulb.hoc file so it is important
+to look in detail as to how it is used. In proc connect_cells there
+do seem to be random connections that are preserved in (our case)
+the ddi_baseline.connect file. The random numbers are picked in the interior
+of a triply nested loop using
+        phi = random.uniform(0,2*PI)
+        r = random.uniform(0,rmax)
+so as long as every machine executes this loop fully then the random
+connections will be consistent. To ensure this, after
+random = new Random(seed) we convert to mcellran4 using
+random.MCellRan4(seed+1)
+(note that the seed is set to 0 in the parameters*.hoc files.)
+Another place random is used is in proc randomise_NMDA() which does a
+random.normal($1,$2) and random.repick() but is used only once at the
+top level when experiment_ddi_baseline.hoc is loaded. So that is ok in
+a parallel environment as well.
+The other places in bulb.hoc are insert_iclamps and random_init
+which deal with things that are not on every machine. For insert_iclamps
+we will be safe by eventually transforming
+         input[i][j].del = random.repick()
+to
+         ran = random.repick()
+	if (mit[i][j] == nil) { input[i][j].del = ran }
+Of course we'll also have to make sure we only create the IClamp if
+the cell exists. But the point here is that there is not a difficult
+Random problem for the transformation.
+This idiom also holds for proc random_init()
+The remaining random calls are found in input.hoc which refer to the
+odour exeriment so can be deferred but I don't think the above idiom
+will fail here either.
+
+So, with the single change we are prepared to obtain standard results
+with a full run.
+setuptime=47.97   runtime=2222.62
+real    37m51.865s
+user    35m15.893s
+sys     0m4.337s
+I guess we don't want to do that again on a single machine. However the
+results were saved to the "standard" subdirectory.
+
+2) Now we can begin the transformation.
+Reduce tstop even further so we can do more test runs for each program
+iteration. Creating a netpar.hoc where we can put procedures that wrap
+the ParallelNetManager calls and stick those procedures in at judicial
+points in the bulb.hoc file.
+
+Put mkpnm() into the create_cells routine since at the top of that we
+can figure out how many cells there are and instantiate the
+ParallelNetManager and associate the gids with nodes. There are 2525 cells.
+We could go faster by reducing nmitx and nmity.
+
+Add the gid field to the Mit and Gran cell types and change so the cell
+creation is
+mit[i][j] = netpar_create("new Mit()")
+by initializing gid to 0 and incrementing every netpar_create call we
+can set the gid and retrieve it from the cell.
+
+Add the connect2target methods and synlist field
+to the Mit and Gran cell types based on
+the NetCon creation statements. Note, thresh can be made external.
+Replace the NetCon creation statements with calls to netpar_connect
+
+After a bit of thought about the issue of having to know the gid for
+a non-existent cell as well as the problem of several of the functions
+iterating over all NetCons for a particular synapse, I decided to
+create mitgid and grangid full matrices as well as convert from list
+to vector for m2gAMPAvec, m2gNMDAvec, and g2mvec.
+
+The use of an APCount to record spiketimes in a Vector is deprecated.
+However since things are setup so that spiketime threshold is -30
+and NetCon threshold is -10, for quantitative identity we decided to
+leave it as is.
+
+found a bug after two days searching where different numbers of machines
+produced different results which turned out to be the fact that
+spanning NetCon weight vectors were not initialized.
+Things seem to work now and we can do some performance tests.
+But first I returned to the original netBulb.zip file and put it under
+cvs control in the parnetBulb repository and added all changes to
+files with a par_ prefix. (except the original also gets the
+change to mcellran4). The standard.100 is for
+nrngui ser_batch1.hoc
+setuptime=46.26   runtime=138.3
+
