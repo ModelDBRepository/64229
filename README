@@ -25,3 +25,5 @@ written to the perf.dat file.
 20120125 update solve methods in parbush/kca.mod parscalebush/kca.mod
 from euler to cnexp as per
 http://www.neuron.yale.edu/phpbb/viewtopic.php?f=28&t=592
+20120323 Replace VERBATIM block use of local dt with dtt since dt is
+now a macro.  Update a function prototype used in a VERBATIM block.

@@ -25,7 +25,7 @@ extern Object** hoc_objgetarg();
 extern int ivoc_list_count(Object*);
 extern Object* ivoc_list_item(Object*, int);
 static void hxe() { hoc_execerror("",0); }
-static initmodel();
+static void initmodel();
 
 extern double hoc_epsilon;
 #define PI 3.141592653589793115997963468544

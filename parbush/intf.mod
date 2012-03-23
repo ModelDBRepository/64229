@@ -19,7 +19,7 @@ ENDCOMMENT
 VERBATIM
 extern void* vector_arg();
 extern FILE* hoc_obj_file_arg(int narg);
-static initmodel();
+static void initmodel();
 
 extern double hoc_epsilon;
 #define PI 3.141592653589793115997963468544
