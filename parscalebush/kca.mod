@@ -54,7 +54,7 @@ BREAKPOINT {
 
 DERIVATIVE state {
 
-	c' = (c_rate*o) - (o_rate*c)
+	c' = c_rate - (c_rate + o_rate)*c
 }
 
 PROCEDURE rates(cai) {	: calculate rate constants

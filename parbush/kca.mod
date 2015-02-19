@@ -1,3 +1,4 @@
+: $Id: kca.mod,v 1.1 2006/02/08 11:09:26 hines Exp $
 TITLE Calcium-dependent potassium conductance
 : Paul Bush 4.1.92  No warranties expressed or implied.
 : Rate constants are not temperature sensitive
@@ -8,7 +9,7 @@ NEURON {
 	SUFFIX kca
 	USEION ca READ cai
 	USEION k WRITE ik
-	RANGE gmax, i, o_rate, c_rate, o
+	RANGE gmax, g, i, o_rate, c_rate, o
 	GLOBAL erev, cadep, maxc_rate, cainit
 }
 
@@ -34,6 +35,7 @@ PARAMETER {
 ASSIGNED { 
 	ik	(mA/cm2) 
 	i	(mA/cm2)
+        g       (mho/cm^2)
 	o		: fraction of channels open
 }
 
@@ -46,12 +48,13 @@ BREAKPOINT {
 	rates(cai)
 	SOLVE state METHOD cnexp
 	o = 1-c
-	i = gmax*o*(v-erev) ik=i 
+        g = gmax*o
+	i = g*(v-erev) ik=i 
 }
 
 DERIVATIVE state {
 
-	c' = (c_rate*o) - (o_rate*c)
+	c' = c_rate - (c_rate + o_rate)*c
 }
 
 PROCEDURE rates(cai) {	: calculate rate constants

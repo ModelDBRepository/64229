@@ -27,3 +27,6 @@ from euler to cnexp as per
 http://www.neuron.yale.edu/phpbb/viewtopic.php?f=28&t=592
 20120323 Replace VERBATIM block use of local dt with dtt since dt is
 now a macro.  Update a function prototype used in a VERBATIM block.
+20150219 With Michael Hines suggestion, parbush/kca.mod and
+parscalebush/kca.mod updated to a derivative block compatible with
+cnexp (restores original model epileptiform activity).
