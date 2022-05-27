@@ -30,3 +30,8 @@ now a macro.  Update a function prototype used in a VERBATIM block.
 20150219 With Michael Hines suggestion, parbush/kca.mod and
 parscalebush/kca.mod updated to a derivative block compatible with
 cnexp (restores original model epileptiform activity).
+
+Changelog
+---------
+2022-05: Updated MOD files to compile with the latest neuron releases where
+         ion variables used as STATE can not be declared as GLOBAL.
