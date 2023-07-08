@@ -2,7 +2,7 @@
 // Olfactory bulb network model: network specification file
 // Andrew Davison, The Babraham Institute, 2000.
 
-// ¬¬ Initialisation ¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬
+// Â¬Â¬ Initialisation Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬
 
 objref cvode, random
 cvode = new CVode(0)    // start with CVode inactive
@@ -22,7 +22,7 @@ outfile = new File()
 strdef filename
 
 
-// ¬¬  Procedures ¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬
+// Â¬Â¬  Procedures Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬
 
 // Create cells --------------------------------------------------------
 
@@ -224,7 +224,7 @@ proc random_init() { local i,j, ran
   }
 }
 
-// ¬¬ Create the model ¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬
+// Â¬Â¬ Create the model Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬Â¬
 
 create_cells()
 connect_cells(diffglom,fileroot)
