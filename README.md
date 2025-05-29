@@ -3,9 +3,9 @@ Migliore, Cannia, Lytton, Markram, and Hines (2006)
 Parallel Network Simulations with NEURON
 *J. Comput. Neurosci.* 21:110-119
 i.e.
-http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=52034
-http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=2730
-http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=51781
+[http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=52034](http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=52034)
+[http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=2730](http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=2730)
+[http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=51781](http://senselab.med.yale.edu/senselab/modeldb/ShowModel.asp?model=51781)
 
 The parscalebush directory contains the extended Bush model used to develop fig 5.
 
@@ -13,6 +13,7 @@ The perf1 directory contains the artificial spikeing net model used to develop f
 
 Note: for autolaunch from ModelDB, after the choice of which of the three figure 4 models to run, an attempt is made to do the appropriate nrnivmodl or mknrndll and dynamically load the shared library or dll. In those three directories, see the test1.sh files for an example of how these simulations were run in parallel. When executed, an out.dat file containing the spike pattern is created as well as some performance information written to the perf.dat file.
 
+## Changelog
 20120125 update solve methods in parbush/kca.mod parscalebush/kca.mod from euler to cnexp as per
 http://www.neuron.yale.edu/phpbb/viewtopic.php?f=28&t=592
 
@@ -20,8 +21,6 @@ http://www.neuron.yale.edu/phpbb/viewtopic.php?f=28&t=592
 
 20150219 With Michael Hines suggestion, parbush/kca.mod and parscalebush/kca.mod updated to a derivative block compatible with cnexp (restores original model epileptiform activity).
 
-Changelog
----------
-2022-05: Updated MOD files to compile with the latest neuron releases where ion variables used as STATE can not be declared as GLOBAL.
+202205 Updated MOD files to compile with the latest neuron releases where ion variables used as STATE can not be declared as GLOBAL.
 
-2025-05-27 – Standardized to Markdown.
+20250527 Standardized to Markdown.
